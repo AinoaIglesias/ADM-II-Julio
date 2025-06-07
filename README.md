@@ -66,7 +66,7 @@ Para machine learning (más adelante)
 _________________________________________________________________________________
 ## Tarea 0
 
-** *Ejecutar el notebook tarea0_exploracion.ipynb* **
+*Ejecutar el notebook tarea0_exploracion.ipynb*
 
 **Objetivos**
 
@@ -105,7 +105,7 @@ Este dataset contiene información de accidentes de tráfico ocurridos en Estado
 
 Para facilitar el análisis se eliminará las columnas que no sean relevantes para el análisis o que contengan una gran cantidad de nulos.
 
-*** Columnas útiles: ***
+**Columnas útiles:**
 
 - ID: Identificador único de accidente.
 
@@ -123,3 +123,54 @@ Para facilitar el análisis se eliminará las columnas que no sean relevantes pa
 - Sunrise_Sunset: momento del día que ocurrió el accidente basado en atardecer y anochecer (dia/noche).
 
 - Distance(mi): Longitud de carretera afectada.
+
+
+_________________________________________________________________________________
+## Tarea 1
+
+*Ejecutar python .\framework\visualizations\main.py*
+
+**Objetivos**
+
+1. Separar fuente de datos de la representación.
+
+2. Aplicar el patrón Estrategia para elegir diferentes formas de visualizar los datos.
+
+3. Tener al menos dos representaciones distintas.
+
+
+**Diseño**
+
+visual/
+├── __init__.py
+├── main.py                  # Ejecuta todo
+├── source.py                # Carga datasets (de cualquier tipo)
+├── strategy.py              # Estrategias reutilizables
+└── config.py                # Parámetros externos: qué columnas usar, qué estrategias aplicar
+
+**Interpretación de las gráficas generadas**
+
+![barras estados](/images/image-2.png)
+
+California (CA) tiene la mayor cantidad de accidentes (>1.6 millones). Le siguen Florida (FL) y Texas (TX). Esto podría tener que ver con densidad de población o tamaño del estado entre otras cosas.
+
+![histograma temperatura](/images/image.png)
+
+La mayoria de accidentes se centran entre los 10 y 30 grados centígrados que son temperaturas normales por lo que no nos da mucha información.
+
+Sin embargo vemos que a altas temperaturas no hay muchos accidentes al contrario que en las bajas temperaturas, por lo que podría interpretarse que a bajas temperaturas es mas habitual sufrir accidentes que en altas temperaturas (tal vez por el estado de las carreteras, nieve, hielo, niebla...)
+
+![histograma humedad](/images/image-1.png)
+
+Distribución casi ascendente, destacando el máximo en el 85-90%
+
+En este caso parece que si hay una clara relación entre numero de accidentes y humedad, La mayor humedad puede deberse al clima de la región o clima del momento (lluvia) por lo que podría verse una relación entre dias lluviosos y accidentes. Habría que anañizar los datos de días lluviosos.
+
+
+![accidentes por mes y año](/images/image-5.png)
+
+Todos los años parece que hay menos accidentes en verano lo que podría relacionarse con lo que vimos antes de la humedad y temperatura, menor humedad y mas temperatura equivalía a menos accidentes. 
+
+Destacan algunas anomalías. Por ejemplo en abril de 2022 hubo un mayor numero de accidentes en comaración al resto de años. En 2020 hubo un descenso en los accidentes bastante grande pero creció enormemente en invierno, esto podría deberse a consecuencia de la pamdemia.
+
+![temperatura media por dia](/images/image-4.png)

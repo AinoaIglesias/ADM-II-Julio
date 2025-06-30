@@ -7,6 +7,7 @@ from io import BytesIO
 import pandas as pd
 from framework.strategy.bar import BarChartStrategy
 from framework.strategy.line import LineChartStrategy
+from framework.strategy.histogram import HistogramStrategy
 from framework.utils.cleaner import clean_dataset
 
 # Ajusta la ruta a tu repo real
@@ -62,14 +63,32 @@ def valores_unicos():
 # 5) Estrategias
 strategies = {
     "Barra": BarChartStrategy(),
-    "Línea": LineChartStrategy()
+    "Línea": LineChartStrategy(),
+    "Histograma": HistogramStrategy(),
 }
 
 # 6) Generar gráfico
 @app.route("/graficar", methods=["POST"])
 def graficar():
-    data = request.get_json()
+    data                   = request.get_json()
     tipo                   = data["tipo"]
+
+
+    # 1) Caso Histograma: sólo necesito y_col
+    if tipo == "Histograma":
+        y_col = data.get("columna_y")
+        if y_col not in df.columns:
+            return jsonify({"error":"Columna 'columna_y' inválida para histograma"}), 400
+        buf = BytesIO()
+        try:
+            strategies[tipo].plot(df, None, y_col, buf)
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return jsonify({"error": str(e)}), 500
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+
+
     x_col                  = data["columna_x"]
     y_col                  = data["columna_y"]
     agregacion             = data["agregacion"]
@@ -77,6 +96,7 @@ def graficar():
     grupo                  = data.get("grupo")  # p.ej. "station"
     agrup_grupo_fecha      = data.get("agrupacion_grupo_fecha", "Ninguna")
     seleccion_grupos       = data.get("seleccion_grupos") or []
+
 
     # validaciones básicas
     if tipo not in strategies:

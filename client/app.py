@@ -29,53 +29,65 @@ with st.expander("Ver detalles"):
 cols = requests.get("http://localhost:5000/columnas").json().get("columns", [])
 
 # Parámetros de la gráfica
-chart_type  = st.selectbox("Tipo de gráfico", ["Barra","Línea"])
-column_x    = st.selectbox("Eje X", df.columns)
-column_y    = st.selectbox("Eje Y", df.columns)
-agg_option  = st.selectbox("¿Qué mostrar en Y?", ["Conteo","Media","Suma"])
+chart_type  = st.selectbox("Tipo de gráfico", ["Barra","Línea","Histograma"])
 
-# Agrupación de fechas en eje X
-fecha_cols = [c for c in df.columns if "date" in c.lower() or "fecha" in c.lower()]
-if column_x in fecha_cols:
-    agrupacion_fecha = st.selectbox("Agrupar fechas X", ["Ninguna","Anual","Mensual","Diaria"])
+
+if chart_type == "Histograma":
+    # Sólo variable numérica
+    num_cols = [c for c in cols if pd.api.types.is_numeric_dtype(df.get(c, []))]
+    col_h    = st.selectbox("Variable numérica", num_cols)
+    if st.button("Generar Histograma"):
+        payload = {
+            "tipo": "Histograma",
+            "columna_y": col_h
+        }
+        r = requests.post("http://localhost:5000/graficar", json=payload)
+        if r.ok:
+            st.image(r.content, use_container_width=True)
+        else:
+            st.error(r.json().get("error"))
+
+#elif chart_type == "Scatter":
+
 else:
-    agrupacion_fecha = "Ninguna"
+    # Esto cubre Barra y Línea con tus desplegables actuales
+    column_x   = st.selectbox("Eje X", cols, key="bx")
+    column_y   = st.selectbox("Eje Y", cols, key="by")
+    agg_option = st.selectbox("¿Qué mostrar en Y?", ["Conteo","Media","Suma"], key="bagg")
 
-# Agrupación por columna adicional
-group_col        = st.selectbox("Agrupar por (opcional)", ["(Sin agrupación)"] + list(df.columns))
-group_date_agg   = "Ninguna"
-seleccion_grupos = []
+    # Si X es fecha, mostramos agrupación de fechas…
+    fecha_cols = [c for c in cols if "date" in c.lower() or "fecha" in c.lower()]
+    agrup_x = "Ninguna"
+    if column_x in fecha_cols:
+        agrup_x = st.selectbox("Agrupar fechas X", ["Ninguna","Anual","Mensual","Diaria"], key="bfx")
 
-if group_col != "(Sin agrupación)":
-    # Si la columna de grupo es fecha, elegimos nivel
-    if any(tok in group_col.lower() for tok in ("date","fecha")):
-        group_date_agg = st.selectbox("Agrupar fechas del grupo", ["Anual","Mensual","Diaria"])
-    # Pedimos al servidor sus valores únicos ya agrupados
-    r = requests.get(
-        "http://localhost:5000/valores_unicos",
-        params={"col": group_col, "agrup": group_date_agg}
-    )
-    valores = r.json().get("values", []) if r.ok else []
-    seleccion_grupos = st.multiselect(
-        f"Seleccionar valores de '{group_col}'",
-        valores,
-        default=valores[:5]
-    )
+    # Agrupación por columna opcional…
+    group_col      = st.selectbox("Agrupar por (opcional)", ["(Sin agrupación)"] + cols, key="bgrp")
+    agrup_g        = "Ninguna"
+    seleccion_grps = []
+    if group_col != "(Sin agrupación)":
+        if any(tok in group_col.lower() for tok in ("date","fecha")):
+            agrup_g = st.selectbox("Agrupar fechas grupo", ["Anual","Mensual","Diaria"], key="bfg")
+        vals = requests.get(
+            "http://localhost:5000/valores_unicos",
+            params={"col": group_col, "agrup": agrup_g}
+        ).json().get("values", [])
+        seleccion_grps = st.multiselect(f"Seleccionar valores de '{group_col}'", vals, default=vals[:5], key="bms")
 
-# Enviar petición
-if st.button("Generar gráfico"):
-    payload = {
-        "tipo": chart_type,
-        "columna_x": column_x,
-        "columna_y": column_y,
-        "agregacion": agg_option,
-        "agrupacion_fecha": agrupacion_fecha,
-        "grupo": None if group_col=="(Sin agrupación)" else group_col,
-        "agrupacion_grupo_fecha": group_date_agg,
-        "seleccion_grupos": seleccion_grupos
-    }
-    resp = requests.post("http://localhost:5000/graficar", json=payload)
-    if resp.ok:
-        st.image(resp.content, use_container_width=True)
-    else:
-        st.error(f"Error al generar el gráfico: {resp.json().get('error')}")
+    if st.button("Generar gráfico", key="bgen"):
+        payload = {
+            "tipo":            chart_type,
+            "columna_x":       column_x,
+            "columna_y":       column_y,
+            "agregacion":      agg_option,
+            "agrupacion_fecha":       agrup_x,
+            "grupo":           None if group_col=="(Sin agrupación)" else group_col,
+            "agrupacion_grupo_fecha": agrup_g,
+            "seleccion_grupos":       seleccion_grps
+        }
+        r = requests.post("http://localhost:5000/graficar", json=payload)
+        if r.ok:
+            st.image(r.content, use_container_width=True)
+        else:
+            st.error(r.json().get("error"))
+

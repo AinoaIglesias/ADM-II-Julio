@@ -6,7 +6,7 @@ import pandas as pd
 
 class BarChartStrategy(ChartStrategy):
     def plot(self, df, x_col, y_col, buffer, agregacion, grupo=None):
-        fig, ax = plt.subplots(figsize=(20, 8), dpi=150)
+        fig, ax = plt.subplots(figsize=(16, 6), dpi=150)
 
         if grupo:
             # Tabla “wide” por x_col y grupo

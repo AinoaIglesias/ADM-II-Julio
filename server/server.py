@@ -8,6 +8,8 @@ import pandas as pd
 from framework.strategy.bar import BarChartStrategy
 from framework.strategy.line import LineChartStrategy
 from framework.strategy.histogram import HistogramStrategy
+from framework.strategy.scatter import ScatterStrategy
+
 from framework.utils.cleaner import clean_dataset
 
 # Ajusta la ruta a tu repo real
@@ -65,6 +67,7 @@ strategies = {
     "Barra": BarChartStrategy(),
     "Línea": LineChartStrategy(),
     "Histograma": HistogramStrategy(),
+    "Scatter": ScatterStrategy()
 }
 
 # 6) Generar gráfico
@@ -88,6 +91,37 @@ def graficar():
         buf.seek(0)
         return send_file(buf, mimetype="image/png")
 
+    # 5.2) SCATTER
+    if tipo == "Scatter":
+        x_col             = data.get("columna_x")
+        y_col             = data.get("columna_y")
+        grupo             = data.get("grupo")
+        agrup_grupo_fecha = data.get("agrupacion_grupo_fecha", "Ninguna")
+        seleccion_grupos  = data.get("seleccion_grupos") or []
+
+        # validaciones mínimas
+        if x_col not in df.columns or y_col not in df.columns:
+            return jsonify({"error": "Columnas X/Y no válidas"}), 400
+
+        d = df.copy()
+        # aplicar filtro por grupo si procede
+        if grupo and seleccion_grupos:
+            if agrup_grupo_fecha != "Ninguna" and pd.api.types.is_datetime64_any_dtype(d[grupo]):
+                if agrup_grupo_fecha == "Anual":
+                    d[grupo] = d[grupo].dt.to_period("Y").astype(str)
+                elif agrup_grupo_fecha == "Mensual":
+                    d[grupo] = d[grupo].dt.to_period("M").astype(str)
+                else:
+                    d[grupo] = d[grupo].dt.date.astype(str)
+            d = d[d[grupo].isin(seleccion_grupos)]
+
+        buf = BytesIO()
+        strategies[tipo].plot(d, x_col, y_col, buf)
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+
+    if tipo not in ("Barra", "Línea"):
+        return jsonify({"error": f"Tipo '{tipo}' no soportado"}), 400
 
     x_col                  = data["columna_x"]
     y_col                  = data["columna_y"]

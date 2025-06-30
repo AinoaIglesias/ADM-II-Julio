@@ -29,7 +29,7 @@ with st.expander("Ver detalles"):
 cols = requests.get("http://localhost:5000/columnas").json().get("columns", [])
 
 # Parámetros de la gráfica
-chart_type  = st.selectbox("Tipo de gráfico", ["Barra","Línea","Histograma"])
+chart_type  = st.selectbox("Tipo de gráfico", ["Barra","Línea","Histograma", "Scatter"])
 
 
 if chart_type == "Histograma":
@@ -47,7 +47,38 @@ if chart_type == "Histograma":
         else:
             st.error(r.json().get("error"))
 
-#elif chart_type == "Scatter":
+elif chart_type == "Scatter":
+     # seleccionamos X e Y
+     col_x = st.selectbox("Eje X", cols, key="sx")
+     col_y = st.selectbox("Eje Y", cols, key="sy")
+     # opcional: agrupación por categoría
+     grp   = st.selectbox("Columna de grupo (opcional)", ["(Sin)"]+cols, key="sg")
+     sel   = []; agr_g = "Ninguna"
+     if grp!="(Sin)":
+         if any(tok in grp.lower() for tok in ("date","fecha")):
+             agr_g = st.selectbox("Agrupar fechas grupo", ["Anual","Mensual","Diaria"], key="sgf")
+         vals = requests.get(
+             "http://localhost:5000/valores_unicos",
+             params={"col":grp, "agrup":agr_g}
+         ).json().get("values",[])
+         sel = st.multiselect(f"Seleccionar {grp}", vals, default=vals[:5], key="sms")
+     if st.button("Generar Scatter"):
+         payload = {
+             "tipo": "Scatter",
+             "columna_x": col_x,
+             "columna_y": col_y,
+             "grupo": None if grp=="(Sin)" else grp,
+             "agrupacion_grupo_fecha": agr_g,
+             "seleccion_grupos": sel
+         }
+         r = requests.post("http://localhost:5000/graficar", json=payload)
+         if r.ok:
+             st.image(r.content, use_container_width=True)
+         else:
+             # manejo de error genérico
+             try: msg = r.json().get("error")
+             except: msg = r.text
+             st.error(f"Error al generar Scatter: {msg}")
 
 else:
     # Esto cubre Barra y Línea con tus desplegables actuales

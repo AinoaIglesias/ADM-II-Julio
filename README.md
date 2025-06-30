@@ -141,6 +141,7 @@ ________________________________________________________________________________
 
 **Diseño**
 
+```bash
 visual/
 ├── __init__.py
 ├── main.py                  # Ejecuta todo
@@ -174,3 +175,16 @@ Todos los años parece que hay menos accidentes en verano lo que podría relacio
 Destacan algunas anomalías. Por ejemplo en abril de 2022 hubo un mayor numero de accidentes en comaración al resto de años. En 2020 hubo un descenso en los accidentes bastante grande pero creció enormemente en invierno, esto podría deberse a consecuencia de la pamdemia.
 
 ![temperatura media por dia](/images/image-4.png)
+
+
+
+_________________________________________________________________________________
+## Tarea 2
+
+*Ejecutar python .\framework\visualizations\main.py*
+
+**Objetivos**
+
+1. Incorpora la posibilidad de comparar múltiples grupos mediante la selección previa de los elementos a comparar.
+
+2. Añadir un segundo dataset

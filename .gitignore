@@ -1,4 +1,6 @@
-data/
+datasets/
+uploads/
+output/
 *.log
 *.swp
 tmp/

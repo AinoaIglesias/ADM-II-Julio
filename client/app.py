@@ -29,7 +29,7 @@ with st.expander("Ver detalles"):
 cols = requests.get("http://localhost:5000/columnas").json().get("columns", [])
 
 # Parámetros de la gráfica
-chart_type  = st.selectbox("Tipo de gráfico", ["Barra","Línea","Histograma", "Scatter"])
+chart_type  = st.selectbox("Tipo de gráfico", ["Barra", "Línea", "Histograma+KDE", "Boxplot", "Correlograma", "Scatter"])
 
 
 if chart_type == "Histograma":
@@ -79,7 +79,46 @@ elif chart_type == "Scatter":
              try: msg = r.json().get("error")
              except: msg = r.text
              st.error(f"Error al generar Scatter: {msg}")
+elif chart_type == "Histograma+KDE":
+    num_cols = [c for c in cols if pd.api.types.is_numeric_dtype(df[c])]
+    col_h    = st.selectbox("Variable para Histograma+KDE", num_cols)
+    if st.button("Generar Histograma+KDE"):
+        payload = {
+            "tipo": "Histograma+KDE",
+            "columna_y": col_h
+        }
+        r = requests.post("http://localhost:5000/graficar", json=payload)
+        if r.ok:
+            st.image(r.content, use_container_width=True)
+        else:
+            st.error(r.json().get("error"))
 
+elif chart_type == "Boxplot":
+    num_cols = [c for c in cols if pd.api.types.is_numeric_dtype(df[c])]
+    col_b    = st.selectbox("Variable para Boxplot", num_cols)
+    # opcional: agrupar por categoría
+    grp = st.selectbox("Agrupar Boxplot por (opcional)", ["(Sin)"] + cols)
+    if st.button("Generar Boxplot"):
+        payload = {
+            "tipo": "Boxplot",
+            "columna_y": col_b,
+            "grupo": None if grp=="(Sin)" else grp
+        }
+        r = requests.post("http://localhost:5000/graficar", json=payload)
+        if r.ok:
+            st.image(r.content, use_container_width=True)
+        else:
+            st.error(r.json().get("error"))
+
+elif chart_type == "Correlograma":
+    st.markdown("**Correlograma**: correlación entre todas las variables numéricas")
+    if st.button("Generar Correlograma"):
+        payload = {"tipo": "Correlograma"}
+        r = requests.post("http://localhost:5000/graficar", json=payload)
+        if r.ok:
+            st.image(r.content, use_container_width=True)
+        else:
+            st.error(r.json().get("error"))
 else:
     # Esto cubre Barra y Línea con tus desplegables actuales
     column_x   = st.selectbox("Eje X", cols, key="bx")

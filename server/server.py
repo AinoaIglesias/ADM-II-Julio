@@ -7,9 +7,11 @@ from io import BytesIO
 import pandas as pd
 from framework.strategy.bar import BarChartStrategy
 from framework.strategy.line import LineChartStrategy
-from framework.strategy.histogram import HistogramStrategy
+#from framework.strategy.histogram import HistogramStrategy
 from framework.strategy.scatter import ScatterStrategy
-
+from framework.strategy.hist_kde import HistogramKDEStrategy
+from framework.strategy.boxplot import BoxplotStrategy
+from framework.strategy.correlograma import CorrelogramaStrategy
 from framework.utils.cleaner import clean_dataset
 
 # Ajusta la ruta a tu repo real
@@ -66,8 +68,11 @@ def valores_unicos():
 strategies = {
     "Barra": BarChartStrategy(),
     "Línea": LineChartStrategy(),
-    "Histograma": HistogramStrategy(),
-    "Scatter": ScatterStrategy()
+    #"Histograma": HistogramStrategy(),
+    "Scatter": ScatterStrategy(),
+    "Histograma+KDE": HistogramKDEStrategy(),
+    "Boxplot":     BoxplotStrategy(),
+    "Correlograma": CorrelogramaStrategy(),
 }
 
 # 6) Generar gráfico
@@ -91,6 +96,41 @@ def graficar():
         buf.seek(0)
         return send_file(buf, mimetype="image/png")
 
+    if tipo == "Histograma+KDE":
+        y_col = data.get("columna_y")
+        buf = BytesIO()
+        try:
+            strategies[tipo].plot(df, None, y_col, buf)
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return jsonify(error=str(e)), 500
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+
+    # — Boxplot (sólo y_col o opcional group) —
+    if tipo == "Boxplot":
+        y_col = data.get("columna_y")
+        grp   = data.get("grupo") 
+        buf = BytesIO()
+        try:
+            strategies[tipo].plot(df, None, y_col, buf, grupo=grp)
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return jsonify(error=str(e)), 500
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+    
+    # — Correlograma (no params) —
+    if tipo == "Correlograma":
+        buf = BytesIO()
+        try:
+            strategies[tipo].plot(df, None, None, buf)
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            return jsonify(error=str(e)), 500
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+    
     # 5.2) SCATTER
     if tipo == "Scatter":
         x_col             = data.get("columna_x")

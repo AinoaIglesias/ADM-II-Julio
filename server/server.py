@@ -28,6 +28,35 @@ for c in df.columns:
     if "date" in c.lower() or "fecha" in c.lower():
         df[c] = pd.to_datetime(df[c], errors="coerce")
 
+@app.route("/upload", methods=["POST"])
+def upload_dataset():
+    """
+    Recibe un CSV desde un form-data bajo la clave 'file',
+    lo limpia y lo deja listo en la variable global `df`.
+    """
+    global df
+    file = request.files.get("file")
+    if file is None:
+        return jsonify({"error": "No se ha enviado ningún fichero"}), 400
+
+    try:
+        raw = pd.read_csv(file)
+    except Exception as e:
+        return jsonify({"error": f"No se pudo leer CSV: {e}"}), 400
+
+    # lo limpiamos exactamente igual que al arrancar
+    new_df = clean_dataset(raw, strategy_numeric="mean",
+                           strategy_categorical="fill", drop_cols=True)
+    # convertimos fechas otra vez
+    for c in new_df.columns:
+        if "date" in c.lower() or "fecha" in c.lower():
+            new_df[c] = pd.to_datetime(new_df[c], errors="coerce")
+
+    df = new_df
+    # respondemos con el nuevo log
+    return jsonify({"message": "Dataset cargado y limpiado",
+                    "log": df.attrs.get("cleaning_log", [])})
+
 # 3) Preview y log
 @app.route("/dataset_limpio", methods=["GET"])
 def preview():

@@ -5,7 +5,7 @@ sys.path.insert(0, ROOT_DIR)
 from flask import Flask, request, jsonify, Response
 import pandas as pd
 
-from framework.cleaner import NullCleaner
+from framework.cleaner import Cleaner
 from framework.strategy.bar import BarChartStrategy
 from framework.strategy.line import LineChartStrategy
 from framework.strategy.histogram import HistogramStrategy
@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 # --- 1) Cargo y limpio dataset inicial ---
 raw_df = pd.read_csv("datasets/madrid_2001_2018_calidad_aire.csv")
-cleaner = NullCleaner(
+cleaner = Cleaner(
     strategy_numeric="mean",
     strategy_categorical="fill",
     drop_cols=True,

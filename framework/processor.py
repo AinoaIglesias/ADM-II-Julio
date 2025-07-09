@@ -19,10 +19,6 @@ class IProcessor(ABC):
         ...
 
     @abstractmethod
-    def get_dtype_counts(self, df: pd.DataFrame) -> Dict[str,int]:
-        ...
-
-    @abstractmethod
     def get_info(self, df: pd.DataFrame) -> str:
         ...
 
@@ -52,10 +48,6 @@ class DataProcessor(IProcessor):
 
     def get_columns(self, df: pd.DataFrame) -> List[str]:
         return df.columns.tolist()
-
-    def get_dtype_counts(self, df: pd.DataFrame) -> Dict[str,int]:
-        # cuántas columnas por cada dtype
-        return df.dtypes.value_counts().to_dict()
 
     def get_info(self, df: pd.DataFrame) -> str:
         # captura el output de df.info() en un string

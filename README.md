@@ -148,6 +148,7 @@ visual/
 ├── source.py                # Carga datasets (de cualquier tipo)
 ├── strategy.py              # Estrategias reutilizables
 └── config.py                # Parámetros externos: qué columnas usar, qué estrategias aplicar
+```
 
 **Interpretación de las gráficas generadas**
 

@@ -1,15 +1,16 @@
+# framework/strategy/correlograma.py
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from io import BytesIO
 from .base import ChartStrategy
 import pandas as pd
 
 class CorrelogramaStrategy(ChartStrategy):
-    def plot(self, df, x_col, y_col, buffer, agregacion=None, grupo=None):
-        """
-        Dibuja la matriz de correlación (heatmap) de todas las columnas numéricas.
-        """
-        # seleccionamos sólo columnas numéricas
+    def plot(self,
+             df: pd.DataFrame,
+             **kwargs) -> bytes:
+
         num_df = df.select_dtypes(include=["number"])
         corr = num_df.corr()
 
@@ -22,8 +23,10 @@ class CorrelogramaStrategy(ChartStrategy):
         ax.set_yticks(ticks)
         ax.set_xticklabels(corr.columns, rotation=90)
         ax.set_yticklabels(corr.columns)
-
-        ax.set_title("Mmatriz de correlación", pad=20)
+        ax.set_title("Matriz de correlación", pad=20)
         plt.tight_layout()
-        fig.savefig(buffer, format="png")
+
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
         plt.close(fig)
+        return buf.getvalue()

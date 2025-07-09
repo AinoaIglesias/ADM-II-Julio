@@ -57,25 +57,11 @@ with st.expander("Ver detalles"):
 
 # --- Parámetros de la gráfica ---
 chart_type = st.selectbox("Tipo de gráfico", [
-    "Barra", "Línea", "Histograma+KDE",
+    "Barra", "Línea", "Histograma",
     "Boxplot", "Correlograma", "Scatter"
 ])
 
-# A partir de aquí tu código de selección de ejes, grupos, etc
-# recordando usar siempre `cols` para poblar los selectboxes:
-
-if chart_type == "Histograma+KDE":
-    num_cols = [c for c in cols if pd.api.types.is_numeric_dtype(df[c])]
-    col_h    = st.selectbox("Variable para Histograma+KDE", num_cols)
-    if st.button("Generar Histograma+KDE"):
-        payload = {"tipo": "Histograma+KDE", "columna_y": col_h}
-        r = requests.post("http://localhost:5000/graficar", json=payload)
-        if r.ok:
-            st.image(r.content, use_container_width=True)
-        else:
-            st.error(r.json().get("error"))
-
-elif chart_type == "Boxplot":
+if chart_type == "Boxplot":
     num_cols = [c for c in cols if pd.api.types.is_numeric_dtype(df[c])]
     col_b    = st.selectbox("Variable para Boxplot", num_cols)
     grp      = st.selectbox("Agrupar Boxplot por (opcional)", ["(Sin)"]+cols)

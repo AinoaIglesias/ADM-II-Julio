@@ -1,23 +1,26 @@
+# framework/strategy/scatter.py
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from io import BytesIO
 from .base import ChartStrategy
 import pandas as pd
 
 class ScatterStrategy(ChartStrategy):
-    def plot(self, df, x_col, y_col, buffer, agregacion=None, grupo=None):
+    def plot(self,
+             df: pd.DataFrame,
+             x_col: str,
+             y_col: str,
+             grupo: str = None,
+             **kwargs) -> bytes:
+
         fig, ax = plt.subplots(figsize=(10, 6))
 
         if grupo:
-            for g, sub in df.groupby(grupo):
-                ax.scatter(
-                    sub[x_col],
-                    sub[y_col],
-                    label=str(g),
-                    alpha=0.7,
-                    s=20
-                )
-            ax.legend(title=grupo, bbox_to_anchor=(1.02,1), loc="upper left", fontsize="small")
+            for name, sub in df.groupby(grupo):
+                ax.scatter(sub[x_col], sub[y_col],
+                           label=str(name), alpha=0.7, s=20)
+            ax.legend(title=grupo, bbox_to_anchor=(1.02, 1), loc="upper left", fontsize="small")
         else:
             ax.scatter(df[x_col], df[y_col], alpha=0.7, s=20)
 
@@ -26,5 +29,7 @@ class ScatterStrategy(ChartStrategy):
         ax.set_title(f"Scatter de {y_col} vs {x_col}")
         plt.tight_layout()
 
-        fig.savefig(buffer, format="png")
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
         plt.close(fig)
+        return buf.getvalue()

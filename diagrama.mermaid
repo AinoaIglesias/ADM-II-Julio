@@ -1,0 +1,91 @@
+classDiagram
+    %% Interfaces y abstracciones
+    class IDataSource {
+        <<interface>>
+        +load() DataFrame
+    }
+    class ICleaner {
+        <<interface>>
+        +clean(df: DataFrame) DataFrame
+    }
+    class IProcessor {
+        <<interface>>
+        +get_shape(df: DataFrame) Tuple[int,int]
+        +get_dtypes(df: DataFrame) Dict[str,str]
+        +get_columns(df: DataFrame) List[str]
+    }
+    class IPlotStrategy {
+        <<interface>>
+        +plot(df: DataFrame, **kwargs) void
+    }
+
+    %% Implementaciones de fuentes de datos
+    class CSVDataSource {
+        -file_path: str
+        +load() DataFrame
+    }
+    class JSONDataSource {
+        -file_path: str
+        +load() DataFrame
+    }
+
+    IDataSource <|.. CSVDataSource
+    IDataSource <|.. JSONDataSource
+    
+    %% Implementaciones de limpieza
+    class NullCleaner {
+        +clean(df: DataFrame) DataFrame
+    }
+    class ColumnCleaner {
+        -cols_to_drop: List[str]
+        +clean(df: DataFrame) DataFrame
+    }
+
+    ICleaner <|.. NullCleaner
+    ICleaner <|.. ColumnCleaner
+
+    %% Implementación de procesador
+    class DataProcessor {
+        +get_shape(df: DataFrame) Tuple[int,int]
+        +get_dtypes(df: DataFrame) Dict[str,str]
+        +get_columns(df: DataFrame) List[str]
+    }
+
+    IProcessor <|.. DataProcessor
+
+    %% Implementaciones de representación (Estrategias)
+    class LinePlotStrategy {
+        +plot(df: DataFrame, **kwargs) void
+    }
+    class BarPlotStrategy {
+        +plot(df: DataFrame, **kwargs) void
+    }
+    class HistogramPlotStrategy {
+        +plot(df: DataFrame, **kwargs) void
+    }
+    class ScatterPlotStrategy {
+        +plot(df: DataFrame, **kwargs) void
+    }
+
+    IPlotStrategy <|.. LinePlotStrategy
+    IPlotStrategy <|.. BarPlotStrategy
+    IPlotStrategy <|.. HistogramPlotStrategy
+    IPlotStrategy <|.. ScatterPlotStrategy
+
+    %% Contexto que orquesta todo
+    class VisualizationContext {
+        -source: IDataSource
+        -cleaner: ICleaner
+        -processor: IProcessor
+        -strategy: IPlotStrategy
+        +set_source(s: IDataSource) void
+        +set_cleaner(c: ICleaner) void
+        +set_processor(p: IProcessor) void
+        +set_strategy(ps: IPlotStrategy) void
+        +execute(**plot_kwargs) void
+    }
+
+    VisualizationContext ..> IDataSource : usa
+    VisualizationContext ..> ICleaner : usa
+    VisualizationContext ..> IProcessor : usa
+    VisualizationContext ..> IPlotStrategy : usa

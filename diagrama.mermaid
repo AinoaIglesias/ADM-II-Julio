@@ -1,91 +1,161 @@
 classDiagram
-    %% Interfaces y abstracciones
+    %% Interfaces de Framework
     class IDataSource {
         <<interface>>
-        +load() DataFrame
-    }
-    class ICleaner {
-        <<interface>>
-        +clean(df: DataFrame) DataFrame
+        +load() pd.DataFrame
     }
     class IProcessor {
         <<interface>>
-        +get_shape(df: DataFrame) Tuple[int,int]
-        +get_dtypes(df: DataFrame) Dict[str,str]
-        +get_columns(df: DataFrame) List[str]
+        +get_shape(df) Tuple[int,int]
+        +get_dtypes(df) Dict[str,str]
+        +get_columns(df) List[str]
+        +get_info(df) str
+        +get_null_percentages(df) Dict[str,float]
+        +get_unique_counts(df) Dict[str,int]
+        +get_unique_values(df, n:int) Dict[str,List[Any]]
+        +get_descriptive_stats(df) pd.DataFrame
+    }
+    class ICleaner {
+        <<interface>>
+        +clean(df) pd.DataFrame
     }
     class IPlotStrategy {
         <<interface>>
-        +plot(df: DataFrame, **kwargs) void
+        +plot(df, **kwargs) bytes
+    }
+    class IModelStrategy {
+        <<interface>>
+        +fit(X, y) Any
+        +predict(X) pd.Series
+        +evaluate(X, y) Dict[str, float]
     }
 
-    %% Implementaciones de fuentes de datos
+    %% Implementaciones de datos y limpieza
     class CSVDataSource {
         -file_path: str
-        +load() DataFrame
+        +load() pd.DataFrame
     }
-    class JSONDataSource {
-        -file_path: str
-        +load() DataFrame
-    }
-
-    IDataSource <|.. CSVDataSource
-    IDataSource <|.. JSONDataSource
-    
-    %% Implementaciones de limpieza
-    class NullCleaner {
-        +clean(df: DataFrame) DataFrame
-    }
-    class ColumnCleaner {
-        -cols_to_drop: List[str]
-        +clean(df: DataFrame) DataFrame
-    }
-
-    ICleaner <|.. NullCleaner
-    ICleaner <|.. ColumnCleaner
-
-    %% Implementación de procesador
     class DataProcessor {
-        +get_shape(df: DataFrame) Tuple[int,int]
-        +get_dtypes(df: DataFrame) Dict[str,str]
-        +get_columns(df: DataFrame) List[str]
+        +get_shape(...)
+        +get_dtypes(...)
+        +get_columns(...)
+        +get_info(...)
+        +get_null_percentages(...)
+        +get_unique_counts(...)
+        +get_unique_values(...)
+        +get_descriptive_stats(...)
+    }
+    class Cleaner {
+        -date_cols: List[str]
+        -date_patterns: List[str]
+        -strategy_numeric: str
+        -strategy_categorical: str
+        -drop_empty_const: bool
+        -null_threshold: float
+        +clean(df) pd.DataFrame
+    }
+    class TypeOnlyCleaner {
+        -dtype_map: Dict[str,Any]
+        +clean(df) pd.DataFrame
     }
 
-    IProcessor <|.. DataProcessor
-
-    %% Implementaciones de representación (Estrategias)
-    class LinePlotStrategy {
-        +plot(df: DataFrame, **kwargs) void
+    %% Implementaciones de estrategia de gráficos
+    class BarChartStrategy {
+        +plot(df, x_col:str, y_col:str, agregacion:str, grupo:str=None) bytes
     }
-    class BarPlotStrategy {
-        +plot(df: DataFrame, **kwargs) void
+    class LineChartStrategy {
+        +plot(df, x_col:str, y_col:str, agregacion:str, grupo:str=None) bytes
     }
-    class HistogramPlotStrategy {
-        +plot(df: DataFrame, **kwargs) void
+    class HistogramStrategy {
+        +plot(df, y_col:str, **kwargs) bytes
     }
-    class ScatterPlotStrategy {
-        +plot(df: DataFrame, **kwargs) void
+    class BoxplotStrategy {
+        +plot(df, y_col:str, grupo:str=None, **kwargs) bytes
     }
-
-    IPlotStrategy <|.. LinePlotStrategy
-    IPlotStrategy <|.. BarPlotStrategy
-    IPlotStrategy <|.. HistogramPlotStrategy
-    IPlotStrategy <|.. ScatterPlotStrategy
-
-    %% Contexto que orquesta todo
-    class VisualizationContext {
-        -source: IDataSource
-        -cleaner: ICleaner
-        -processor: IProcessor
-        -strategy: IPlotStrategy
-        +set_source(s: IDataSource) void
-        +set_cleaner(c: ICleaner) void
-        +set_processor(p: IProcessor) void
-        +set_strategy(ps: IPlotStrategy) void
-        +execute(**plot_kwargs) void
+    class CorrelogramaStrategy {
+        +plot(df, **kwargs) bytes
+    }
+    class ScatterStrategy {
+        +plot(df, x_col:str, y_col:str, grupo:str=None, **kwargs) bytes
     }
 
-    VisualizationContext ..> IDataSource : usa
-    VisualizationContext ..> ICleaner : usa
-    VisualizationContext ..> IProcessor : usa
-    VisualizationContext ..> IPlotStrategy : usa
+    %% Implementaciones de estrategia de modelos
+    class BasePipelineModel {
+        -estimator: Any
+        -param_grid: Dict[str,Any]
+        -preprocessor: ColumnTransformer
+        -pipeline: Pipeline or GridSearchCV
+        +fit(X, y) Any
+        +predict(X) pd.Series
+        +evaluate(X, y) Dict[str,Any]
+    }
+    class LinearRegressionModel {
+        -reg: LinearRegression
+        +fit(X, y) Any
+        +predict(X) pd.Series
+        +evaluate(X, y) Dict[str,float]
+    }
+    class LogisticClassification {
+        -clf: LogisticRegression
+        +fit(X, y) Any
+        +predict(X) pd.Series
+        +evaluate(X, y) Dict[str,Any]
+    }
+    class KMeansClustering {
+        -n_clusters: int
+        -km: KMeans
+        +fit(X, y=None) Any
+        +predict(X) pd.Series
+        +evaluate(X, y=None) Dict[str,Any]
+    }
+
+    %% Relaciones de herencia
+    IDataSource      <|.. CSVDataSource
+    IProcessor       <|.. DataProcessor
+    ICleaner         <|.. Cleaner
+    ICleaner         <|.. TypeOnlyCleaner
+    IPlotStrategy    <|.. BarChartStrategy
+    IPlotStrategy    <|.. LineChartStrategy
+    IPlotStrategy    <|.. HistogramStrategy
+    IPlotStrategy    <|.. BoxplotStrategy
+    IPlotStrategy    <|.. CorrelogramaStrategy
+    IPlotStrategy    <|.. ScatterStrategy
+    IModelStrategy   <|.. BasePipelineModel
+    IModelStrategy   <|.. LinearRegressionModel
+    IModelStrategy   <|.. LogisticClassification
+    IModelStrategy   <|.. KMeansClustering
+
+    %% Flask app y notebook cliente
+    class FlaskApp {
+        +load_dataset()
+        +get_columns()
+        +get_dtypes()
+        +get_info()
+        +get_null_percentages()
+        +get_unique_counts()
+        +get_unique_values()
+        +get_descriptive_stats()
+        +convert_types()
+        +graficar()
+        +train_model()
+        +evaluate_model()
+        +predict_model()
+    }
+    FlaskApp ..> CSVDataSource        : uses
+    FlaskApp ..> Cleaner              : uses
+    FlaskApp ..> TypeOnlyCleaner      : uses
+    FlaskApp ..> DataProcessor        : uses
+    FlaskApp ..> IPlotStrategy        : uses
+    FlaskApp ..> IModelStrategy       : uses
+    FlaskApp ..> pd.DataFrame         : holds as global
+
+    class JupyterClient {
+        <<client>>
+        +POST /load_dataset
+        +GET  /columns, /dtypes, ...
+        +POST /graficar
+        +POST /train_model
+        +POST /evaluate_model
+        +POST /predict_model
+    }
+    JupyterClient ..> FlaskApp : consumes

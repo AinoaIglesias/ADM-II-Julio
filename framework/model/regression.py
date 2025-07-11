@@ -1,6 +1,6 @@
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-from .base import IModelStrategy
+from .modelbase import IModelStrategy
 import pandas as pd
 
 class LinearRegressionModel(IModelStrategy):

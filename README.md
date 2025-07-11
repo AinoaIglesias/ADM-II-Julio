@@ -7,6 +7,10 @@ Análisi de Datos Masivos, Segunda parte
 Junio, 2025
 ______________________________________________________________________________
 
+streamlit run client/app.py --server.maxUploadSize=3072
+
+python server/server_V2.py   
+
 Este repositorio contiene el desarrollo de las tareas prácticas de la asignatura Análisis de Datos, del Máster en Ingeniería Informática.
 
 El objetivo principal es construir, paso a paso, un entorno de análisis y visualización de datos flexible y extensible. A lo largo de las prácticas se aplican técnicas de preprocesado, visualización, análisis exploratorio, representación geográfica y aprendizaje automático, trabajando con diversos conjuntos de datos.

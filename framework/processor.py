@@ -1,5 +1,3 @@
-# framework/processor/base.py
-
 from abc import ABC, abstractmethod
 import pandas as pd
 from typing import Any, Dict, List, Tuple

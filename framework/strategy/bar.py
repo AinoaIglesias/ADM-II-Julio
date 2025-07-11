@@ -1,4 +1,3 @@
-# framework/strategy/bar.py
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -18,6 +17,7 @@ class BarChartStrategy(ChartStrategy):
 
         if grupo:
             # agrupado por x_col + grupo
+            df[grupo] = df[grupo].astype(str)
             if agregacion == "Conteo":
                 grp = df.groupby([x_col, grupo]).size().unstack(fill_value=0)
             else:

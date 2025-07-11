@@ -1,6 +1,6 @@
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix
-from .base import IModelStrategy
+from .modelbase import IModelStrategy
 import pandas as pd
 
 class LogisticClassification(IModelStrategy):
